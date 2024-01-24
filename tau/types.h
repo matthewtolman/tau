@@ -86,7 +86,18 @@ typedef tau_i32 tau_bool32; // Prefer this!
 
 // (U)Intptr is only here for semantic reasons really as this library will only support 32/64 bit OSes.
 // Are there any modern OSes (not 16 bit) where tau_iptr != ptrdiff_t/tau_ll ?
-#if defined(_WIN64)
+#if defined(EMSCRIPTEN)
+  // To mark types changing their size, e.g. tau_iptr
+  #ifndef TAU__W64
+    #if !defined(__midl) && (defined(_X86_) || defined(_M_IX86)) && _MSC_VER >= 1300
+      #define TAU__W64 __w64
+    #else
+      #define TAU__W64
+    #endif
+  #endif
+  typedef TAU__W64 signed int     tau_iptr;
+  typedef TAU__W64 unsigned int   tau_uptr;
+#elif defined(_WIN64)
     typedef signed    __int64    tau_iptr;
     typedef unsigned  __int64    tau_uptr;
 #elif defined(_WIN32)
@@ -149,7 +160,12 @@ TAU_STATIC_ASSERT(sizeof(tau_bool8) == 1);              // bools
 TAU_STATIC_ASSERT(sizeof(tau_bool16) == 2);
 TAU_STATIC_ASSERT(sizeof(tau_bool32)  == 4);
 // pointer sizes (differs on architectures like CHERI)
+#if defined(EMSCRIPTEN)
+TAU_STATIC_ASSERT(sizeof(tau_iptr) == sizeof(signed int));
+TAU_STATIC_ASSERT(sizeof(tau_uptr) == sizeof(unsigned int));
+#else
 TAU_STATIC_ASSERT(sizeof(tau_iptr) == sizeof(tau_ll));  // tau_ull --> size_t
 TAU_STATIC_ASSERT(sizeof(tau_uptr) == sizeof(tau_ull)); // tau_ll  --> ptrdiff_t
+#endif
 
 #endif // TAU_TYPES_H
